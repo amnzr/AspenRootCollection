@@ -1,3 +1,12 @@
+library(DT)
+library(shiny)
+
+# navbarPage(title = "Sampling locations", id="main",
+#            tabPanel("Map", leafletOutput("map", height=1000)),
+#            tabPanel("Data", dataTableOutput("data")),
+#            tabPanel("About",includeMarkdown("README.md")))
+
+
 # ui parts
 ## header board
 header <- dashboardHeader(
@@ -15,9 +24,15 @@ sidebar <- dashboardSidebar(
 )
 
 ## body
-body <- dashboardBody(
-  leafletOutput("map")
+body <- dashboardBody(tags$head(
+  tags$style(HTML(".skin-blue .main-header .logo"))
+),
+tabsetPanel(
+  tabPanel("Map", leafletOutput("map", height=1000)),
+  tabPanel("Data", dataTableOutput("data")),
+  tabPanel("About",includeMarkdown("README.md")))
 )
+
 
 # putting ui parts together
 dashboardPage(
