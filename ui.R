@@ -25,7 +25,8 @@ sidebar <- dashboardSidebar(
                 str_split("_") %>%
                 unlist() %>%
                 unique(),
-              multiple = TRUE),
+              selected = NULL,
+              multiple = FALSE),
   dateRangeInput("dates", "Sampling dates:", start = NULL, end = NULL)
 )
 # )
