@@ -14,14 +14,21 @@ header <- dashboardHeader(
 
 ## Side bar
 sidebar <- dashboardSidebar(
-  selectInput("sampled_by", "Sampled By",
-              choices = c("Aman", "Tiggy", "Nazeer", "Miko"),
-              multiple = TRUE),
   selectInput("section", "Section(s)",
-              choices = c("A","B","D"),
+              choices = c(data$Section %>%
+                            unique()),
+              multiple = TRUE),
+  # conditionalPanel(condition = "input.section.length > 0",
+  selectInput("sampled_by", "Sampled By",
+              choices = data$Sampled_by %>%
+                unique() %>%
+                str_split("_") %>%
+                unlist() %>%
+                unique(),
               multiple = TRUE),
   dateRangeInput("dates", "Sampling dates:", start = NULL, end = NULL)
 )
+# )
 
 ## body
 body <- dashboardBody(tags$head(
@@ -33,11 +40,12 @@ tabsetPanel(
   tabPanel("About",includeMarkdown("README.md")))
 )
 
-
+shinyUI(
 # putting ui parts together
 dashboardPage(
   title = "Aspen root collection",
   header = header,
-  sidebar = sidebar ,
+  sidebar = sidebar,
   body = body
+)
 )
