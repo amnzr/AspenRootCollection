@@ -62,7 +62,7 @@ shinyServer(function(input, output, session) {
       data <- data[data$Section %in% input$section,]
     }
     if (length(input$sampled_by) > 0 ) {
-      data <- data[data$Sampled_by %in% input$sampled_by,]
+      data <- data[grepl(input$sampled_by, data$Sampled_by), ]
     }
     return(unique(data))
   })
