@@ -20,7 +20,7 @@ shinyServer(function(input, output, session) {
   data$Longitude <- as.numeric(data$Longitude) %>% suppressWarnings()
   data$Latitude <- as.numeric(data$Latitude) %>% suppressWarnings()
 
-  #trimming the wrong coordinates. Kiping only if they are in this format: dd.ddddd
+  #trimming the wrong format coordinates. Kipping only if they are in this format: dd.ddddd
   data <- data[grepl("^\\d+\\.\\d+$", data$Latitude) | grepl("^\\d+\\.\\d+$", data$Longitude), ]
 
   #remove the wrong and strange coordinates
@@ -29,33 +29,57 @@ shinyServer(function(input, output, session) {
   #extract the section and set as new column
   data %<>% mutate(Section = str_match(Tree, "^([A-Za-z]+)")[,1], .after = Tree)
 
-  # filter data based on the sidebar selection
-  data_filter <- reactive({
-    data %>% filter(Section %in% input$section,
-                    Sampled_by %in% input$sampled_by)
-  })
-
   #create a color palette
-  pal <- colorFactor(palette = glasbey.colors(length(unique(data$Section))),
-                     domain = unique(data$Section))
-
+  pal <- reactive({
+    colorFactor(palette = glasbey.colors(length(unique(data$Section))),
+                domain = unique(data$Section))
+  })
 
   output$map <- renderLeaflet({
     leaflet(data) %>%
-      addCircles(lng = ~Longitude, lat = ~Latitude) %>%
       addTiles() %>%
       addCircleMarkers(data = data, lat =  ~Latitude, lng =~Longitude,
-                       radius = 5, popup = ~as.character(Tree),
-                       color = ~pal(Section),
+                       radius = 5,
+                       label = ~Tree,
+                       popup = ~paste("<strong>", Tree, "</strong>",
+                                      "<br>Sampled_by:", Sampled_by,
+                                      "<br>Sampling_date:", Sampling_date),
+                       color = ~pal()(data_filter()$Section),
                        stroke = FALSE, fillOpacity = 0.8) %>%
-      addLegend(pal=pal, values=data$Section, opacity=1,
-                na.label = "Not Available", title = "Section") %>%
+      addLegend(pal=pal(),
+                values=unique(data_filter()$Section),
+                opacity=1, na.label = "Not Available", title = "Section") %>%
       addEasyButton(easyButton(
         icon="fa-crosshairs", title="ME",
         onClick=JS("function(btn, map){ map.locate({setView: true}); }")))
   })
 
-  output$data <- renderDataTable(datatable(data,filter = 'top'))
+  output$data <- renderDataTable(datatable(data, filter = 'top'))
+
+  # filter data based on the sidebar selection
+  data_filter <- reactive({
+    if (length(input$section) > 0 ) {
+      data <- data[data$Section %in% input$section,]
+    }
+    if (length(input$sampled_by) > 0 ) {
+      data <- data[data$Sampled_by %in% input$sampled_by,]
+    }
+    return(unique(data))
+  })
+
+  observe({
+    leafletProxy("map") %>%
+      clearMarkers() %>%
+      addCircleMarkers(data = data_filter(), lat =  ~Latitude, lng =~Longitude,
+                       radius = 5,
+                       label = ~Tree,
+                       popup = ~paste("<strong>", Tree, "</strong>",
+                                      "<br>Sampled_by:", Sampled_by,
+                                      "<br>Sampling_date:", Sampling_date),
+                       color = ~pal()(data_filter()$Section),
+                       stroke = FALSE, fillOpacity = 0.8)
+
+  })
 })
 
 
