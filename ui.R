@@ -10,22 +10,7 @@ header <- dashboardHeader(
   title = 'Aspen Root Sampling')
 
 ## Side bar
-sidebar <- dashboardSidebar(
-  selectInput("section", "Section(s)",
-              choices = c(data$Section %>%
-                            unique()),
-              multiple = TRUE),
-  selectInput("sampled_by", "Sampled By",
-              choices = data$Sampled_by %>%
-                str_split("_") %>%
-                unlist() %>%
-                unique(),
-              selected = NULL,
-              multiple = TRUE),
-  dateRangeInput("dates", "Sampling dates:",
-                 start = min(data$Sampling_date),
-                 end = max(data$Sampling_date))
-)
+sidebar <- uiOutput("sidebar")
 
 ## body
 body <- dashboardBody(tags$head(
