@@ -29,6 +29,26 @@ shinyServer(function(input, output, session) {
   #extract the section and set as new column
   data %<>% mutate(Section = str_match(Tree, "^([A-Za-z]+)")[,1], .after = Tree)
 
+  #sending the sidebar to UI
+  output$sidebar <- renderUI({
+    dashboardSidebar(
+      selectInput("section", "Section(s)",
+                  choices = c(data$Section %>%
+                                unique()),
+                  multiple = TRUE),
+      selectInput("sampled_by", "Sampled By",
+                  choices = data$Sampled_by %>%
+                    str_split("_") %>%
+                    unlist() %>%
+                    unique(),
+                  selected = NULL,
+                  multiple = TRUE),
+      dateRangeInput("dates", "Sampling dates:",
+                     start = min(data$Sampling_date),
+                     end = max(data$Sampling_date))
+    )
+  })
+
   #create a color palette
   pal <- reactive({
     colorFactor(palette = glasbey.colors(length(unique(data$Section))),
