@@ -54,7 +54,6 @@ shinyServer(function(input, output, session) {
         onClick=JS("function(btn, map){ map.locate({setView: true}); }")))
   })
 
-  output$data <- renderDataTable(datatable(data, filter = 'top'))
 
   # filter data based on the sidebar selection
   data_filter <- reactive({
@@ -62,10 +61,17 @@ shinyServer(function(input, output, session) {
       data <- data[data$Section %in% input$section,]
     }
     if (length(input$sampled_by) > 0 ) {
-      data <- data[grepl(input$sampled_by, data$Sampled_by), ]
+      data <- data[grepl(paste(input$sampled_by, collapse = "|"), data$Sampled_by), ]
     }
+    # else {
+    #   data <- data()
+    # }
+    # print(data)
     return(unique(data))
   })
+
+  output$table <- renderDataTable(datatable(data_filter(), filter = 'top'))
+  # print(data_filter())
 
   observe({
     leafletProxy("map") %>%
