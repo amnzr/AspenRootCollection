@@ -22,7 +22,9 @@ sidebar <- dashboardSidebar(
                 unique(),
               selected = NULL,
               multiple = TRUE),
-  dateRangeInput("dates", "Sampling dates:", start = NULL, end = NULL)
+  dateRangeInput("dates", "Sampling dates:",
+                 start = min(data$Sampling_date),
+                 end = max(data$Sampling_date))
 )
 
 ## body
