@@ -1,11 +1,8 @@
 library(DT)
+library(leaflet)
 library(shiny)
-
-# navbarPage(title = "Sampling locations", id="main",
-#            tabPanel("Map", leafletOutput("map", height=1000)),
-#            tabPanel("Data", dataTableOutput("data")),
-#            tabPanel("About",includeMarkdown("README.md")))
-
+library(shinydashboard)
+library(stringr)
 
 # ui parts
 ## header board
@@ -18,7 +15,6 @@ sidebar <- dashboardSidebar(
               choices = c(data$Section %>%
                             unique()),
               multiple = TRUE),
-  # conditionalPanel(condition = "input.section.length > 0",
   selectInput("sampled_by", "Sampled By",
               choices = data$Sampled_by %>%
                 unique() %>%
@@ -26,10 +22,9 @@ sidebar <- dashboardSidebar(
                 unlist() %>%
                 unique(),
               selected = NULL,
-              multiple = FALSE),
+              multiple = TRUE),
   dateRangeInput("dates", "Sampling dates:", start = NULL, end = NULL)
 )
-# )
 
 ## body
 body <- dashboardBody(tags$head(
@@ -37,7 +32,7 @@ body <- dashboardBody(tags$head(
 ),
 tabsetPanel(
   tabPanel("Map", leafletOutput("map", height=1000)),
-  tabPanel("Data", dataTableOutput("data")),
+  tabPanel("Data", dataTableOutput("table")),
   tabPanel("About",includeMarkdown("README.md")))
 )
 
