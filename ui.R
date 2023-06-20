@@ -17,7 +17,6 @@ sidebar <- dashboardSidebar(
               multiple = TRUE),
   selectInput("sampled_by", "Sampled By",
               choices = data$Sampled_by %>%
-                unique() %>%
                 str_split("_") %>%
                 unlist() %>%
                 unique(),
