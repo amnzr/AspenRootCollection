@@ -63,6 +63,10 @@ shinyServer(function(input, output, session) {
     if (length(input$sampled_by) > 0 ) {
       data <- data[grepl(paste(input$sampled_by, collapse = "|"), data$Sampled_by), ]
     }
+    if (length(input$dates) > 0 ) {
+      data <- subset(data, data$Sampling_date >= input$dates[1] & data$Sampling_date <= input$dates[2])
+    }
+
     # else {
     #   data <- data()
     # }
@@ -118,6 +122,17 @@ shinyServer(function(input, output, session) {
                         choices = data$Section %>%
                           unique(),
                         selected = NULL)
+  })
+
+  observe({
+    if(!is.null(input$section) || !is.null(input$sampled_by))
+      updateDateRangeInput(session, "date",
+                           start = min(data_filter()$Sampling_date),
+                           end = max(data_filter()$Sampling_date))
+    else
+      updateDateRangeInput(session, "date",
+                           start = min(data$Sampling_date),
+                           end = max(data$Sampling_date))
   })
 })
 
