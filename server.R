@@ -6,6 +6,7 @@ library(Polychrome)
 library(RColorBrewer)
 library(shiny)
 library(shinydashboard)
+library(shinyWidgets)
 library(stringr)
 library(tidyverse)
 
@@ -32,20 +33,23 @@ shinyServer(function(input, output, session) {
   #sending the sidebar to UI
   output$sidebar <- renderUI({
     dashboardSidebar(
-      selectInput("section", "Section(s)",
+      pickerInput("section", "Section(s)",
                   choices = c(data$Section %>%
                                 unique()),
-                  multiple = TRUE),
-      selectInput("sampled_by", "Sampled By",
+                  multiple = TRUE,
+                  options = list(`actions-box` = TRUE)),
+      pickerInput("sampled_by", "Sampled By",
                   choices = data$Sampled_by %>%
                     str_split("_") %>%
                     unlist() %>%
                     unique(),
                   selected = NULL,
-                  multiple = TRUE),
+                  multiple = TRUE,
+                  options = list(`actions-box` = TRUE)),
       dateRangeInput("dates", "Sampling dates:",
                      start = min(data$Sampling_date),
-                     end = max(data$Sampling_date))
+                     end = max(data$Sampling_date)),
+      prettySwitch("dark_mode", "Dark mode")
     )
   })
 
@@ -115,7 +119,7 @@ shinyServer(function(input, output, session) {
   #updating the selectInputs section and sampled_by based on each other
   observe({
     if(!is.null(input$section))
-      updateSelectInput(session, "sampled_by",
+      updatePickerInput(session, "sampled_by",
                         choices = data[grepl(paste(input$section, collapse = "|"),
                                              data$Section), "Sampled_by"]$Sampled_by %>%
                           str_split("_") %>%
@@ -123,7 +127,7 @@ shinyServer(function(input, output, session) {
                           unique(),
                         selected = isolate(input$sampled_by))
     else
-      updateSelectInput(session, "sampled_by",
+      updatePickerInput(session, "sampled_by",
                         choices = data$Sampled_by %>%
                           str_split("_") %>%
                           unlist() %>%
@@ -133,12 +137,12 @@ shinyServer(function(input, output, session) {
 
   observe({
     if(!is.null(input$sampled_by))
-      updateSelectInput(session, "section",
+      updatePickerInput(session, "section",
                         choices = data[grepl(paste(input$sampled_by, collapse = "|"),
                                              data$Sampled_by), "Section"]$Section %>% unique(),
                         selected = isolate(input$section))
     else
-      updateSelectInput(session, "section",
+      updatePickerInput(session, "section",
                         choices = data$Section %>%
                           unique(),
                         selected = NULL)
@@ -154,6 +158,14 @@ shinyServer(function(input, output, session) {
                            start = min(data$Sampling_date),
                            end = max(data$Sampling_date))
   })
+
+
+  observe(session$setCurrentTheme(
+    if (isTRUE(input$dark_mode))
+      bs_theme(bg = "black", fg = "grey", primary = "grey")
+    else
+      bs_theme(primary = "red", secondary = "#abd1de")
+  ))
 })
 
 
