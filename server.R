@@ -38,7 +38,7 @@ shinyServer(function(input, output, session) {
   output$map <- renderLeaflet({
     leaflet(data) %>%
       addTiles() %>%
-      addCircleMarkers(data = data, lat =  ~Latitude, lng =~Longitude,
+      addCircleMarkers(data = data_filter(), lat =  ~Latitude, lng =~Longitude,
                        radius = 5,
                        label = ~Tree,
                        popup = ~paste("<strong>", Tree, "</strong>",
@@ -73,18 +73,51 @@ shinyServer(function(input, output, session) {
   output$table <- renderDataTable(datatable(data_filter(), filter = 'top'))
   # print(data_filter())
 
-  observe({
-    leafletProxy("map") %>%
-      clearMarkers() %>%
-      addCircleMarkers(data = data_filter(), lat =  ~Latitude, lng =~Longitude,
-                       radius = 5,
-                       label = ~Tree,
-                       popup = ~paste("<strong>", Tree, "</strong>",
-                                      "<br>Sampled_by:", Sampled_by,
-                                      "<br>Sampling_date:", Sampling_date),
-                       color = ~pal()(data_filter()$Section),
-                       stroke = FALSE, fillOpacity = 0.8)
+  # #update the map based on filtering
+  # observe({
+  #   leafletProxy("map") %>%
+  #     clearMarkers() %>%
+  #     addCircleMarkers(data = data_filter(), lat =  ~Latitude, lng =~Longitude,
+  #                      radius = 5,
+  #                      label = ~Tree,
+  #                      popup = ~paste("<strong>", Tree, "</strong>",
+  #                                     "<br>Sampled_by:", Sampled_by,
+  #                                     "<br>Sampling_date:", Sampling_date),
+  #                      color = ~pal()(data_filter()$Section),
+  #                      stroke = FALSE, fillOpacity = 0.8)
+  #
+  # })
 
+  #updating the selectInputs section and sampled_by based on each other
+  observe({
+    if(!is.null(input$section))
+      updateSelectInput(session, "sampled_by",
+                        choices = data[grepl(paste(input$section, collapse = "|"),
+                                             data$Section), "Sampled_by"]$Sampled_by %>%
+                          str_split("_") %>%
+                          unlist() %>%
+                          unique(),
+                        selected = isolate(input$sampled_by))
+    else
+      updateSelectInput(session, "sampled_by",
+                        choices = data$Sampled_by %>%
+                          str_split("_") %>%
+                          unlist() %>%
+                          unique(),
+                        selected = NULL)
+  })
+
+  observe({
+    if(!is.null(input$sampled_by))
+      updateSelectInput(session, "section",
+                        choices = data[grepl(paste(input$sampled_by, collapse = "|"),
+                                             data$Sampled_by), "Section"]$Section %>% unique(),
+                        selected = isolate(input$section))
+    else
+      updateSelectInput(session, "section",
+                        choices = data$Section %>%
+                          unique(),
+                        selected = NULL)
   })
 })
 
