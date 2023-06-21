@@ -7,3 +7,11 @@
 #addMarkers
 <https://www.drdataking.com/post/how-to-add-multiple-lines-label-on-a-leaflet-map/>
 
+#shinyWidgets
+<https://dreamrs.github.io/shinyWidgets/index.html>
+
+#BootstrapIcons
+<https://icons.getbootstrap.com/?q=tree>
+
+#bslib
+<https://rstudio.github.io/bslib/articles/dashboards.html#theming>
