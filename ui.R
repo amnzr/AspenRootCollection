@@ -6,13 +6,6 @@ library(shiny)
 library(shinydashboard)
 library(stringr)
 
-#   navset_card_tab(
-#   sidebar = uiOutput("sidebar"),
-#   nav_panel("Map", leafletOutput("map", height=600)),
-#   nav_panel("Data", dataTableOutput("table")),
-#   nav_panel("About",includeMarkdown("README.md"))
-# )
-
 page_sidebar(theme = bs_theme(secondary = "#21719c"),
              sidebar = uiOutput("sidebar"),
              title = "Aspen root collection",
@@ -27,7 +20,7 @@ page_sidebar(theme = bs_theme(secondary = "#21719c"),
                value_box(
                  title = "Number of Collcetors",
                  value = textOutput("collectors"),
-                 showcase = bs_icon("person-heart"),
+                 showcase = bs_icon("person-check"),
                  theme_color = "secondary"
                )
              ),
@@ -37,6 +30,4 @@ page_sidebar(theme = bs_theme(secondary = "#21719c"),
                nav_panel("Data", dataTableOutput("table")),
                nav_panel("About",includeMarkdown("README.md"))
              )
-
-
 )
