@@ -46,17 +46,22 @@ shinyServer(function(input, output, session) {
                   selected = NULL,
                   multiple = TRUE,
                   options = list(`actions-box` = TRUE)),
-      dateRangeInput("dates", "Sampling dates:",
-                     start = min(data$Sampling_date),
-                     end = max(data$Sampling_date)),
+      airDatepickerInput("dates", "Sampling dates:",
+                         minDate = min(data$Sampling_date),
+                         maxDate = max(data$Sampling_date),
+                         range = TRUE,
+                         clearButton = TRUE,
+                         update_on = 'close'
+                         ),
       prettySwitch("dark_mode", "Dark mode")
     )
   })
 
   #create a color palette
   pal <- reactive({
-    colorFactor(palette = glasbey.colors(length(unique(data$Section))),
-                domain = unique(data$Section))
+    #create a color palette
+    colorFactor(palette = glasbey.colors(length(unique(data_filter()$Section))),
+                domain = unique(data_filter()$Section))
   })
 
   output$map <- renderLeaflet({
