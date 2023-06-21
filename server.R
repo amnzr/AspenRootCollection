@@ -53,35 +53,52 @@ shinyServer(function(input, output, session) {
                          clearButton = TRUE,
                          update_on = 'close'
                          ),
-      prettySwitch("dark_mode", "Dark mode")
+      prettySwitch("dark_mode", "Dark mode"),
+      checkboxInput("paletteCheckbox", "Color Blind Friendly", value = FALSE)
     )
   })
 
   #create a color palette
   pal <- reactive({
-    #create a color palette
-    colorFactor(palette = glasbey.colors(length(unique(data_filter()$Section))),
-                domain = unique(data_filter()$Section))
+    if(isTRUE(input$paletteCheckbox)) {
+      paletteCol<- colorFactor(palette = c("#1F77B4", "#FF7F0E", "#2CA02C", "#D62728", "#9467BD", "#8C564B",
+                                           "#E377C2", "#7F7F7F", "#BCBD22", "#17BECF", "#1B9E77", "#D95F02",
+                                           "#7570B3", "#E7298A", "#66A61E", "#E6AB02", "#A6761D", "#666666",
+                                           "#FDAE61", "#3288BD", "#5E4FA2", "#F16913"),
+                               domain = unique(data_filter()$Section)) }
+
+    else {
+      #create a color palette
+      paletteCol <- colorFactor(palette = glasbey.colors(length(unique(data_filter()$Section))),
+                                domain = unique(data_filter()$Section)) }
+    return(paletteCol)
   })
 
-  output$map <- renderLeaflet({
-    leaflet(data) %>%
-      addTiles() %>%
-      addCircleMarkers(data = data_filter(), lat =  ~Latitude, lng =~Longitude,
-                       radius = 5,
-                       label = ~Tree,
-                       popup = ~paste("<strong>", Tree, "</strong>",
-                                      "<br>Sampled_by:", Sampled_by,
-                                      "<br>Sampling_date:", Sampling_date),
-                       color = ~pal()(data_filter()$Section),
-                       stroke = FALSE, fillOpacity = 0.8) %>%
-      addLegend(pal=pal(),
-                values=unique(data_filter()$Section),
-                opacity=1, na.label = "Not Available", title = "Section") %>%
-      addEasyButton(easyButton(
-        icon="fa-crosshairs", title="ME",
-        onClick=JS("function(btn, map){ map.locate({setView: true}); }")))
-  })
+leafy <- reactive({
+  p <- leaflet(data) %>%
+    addTiles() %>%
+    addCircleMarkers(data = data_filter(), lat =  ~Latitude, lng =~Longitude,
+                     radius = 5,
+                     label = ~Tree,
+                     popup = ~paste("<strong>", Tree, "</strong>",
+                                    "<br>Sampled_by:", Sampled_by,
+                                    "<br>Sampling_date:", Sampling_date),
+                     color = ~pal()(data_filter()$Section),
+                     stroke = FALSE, fillOpacity = 0.8) %>%
+    addLegend(pal=pal(),
+              values=unique(data_filter()$Section),
+              opacity=1, na.label = "Not Available", title = "Section") %>%
+    addEasyButton(easyButton(
+      icon="fa-crosshairs", title="ME",
+      onClick=JS("function(btn, map){ map.locate({setView: true}); }")))
+
+  if (isTRUE(input$dark_mode))
+    p <- p %>% addProviderTiles("CartoDB.DarkMatter")
+
+  return(p)
+})
+
+output$map <- renderLeaflet({leafy()})
 
 
   # filter data based on the sidebar selection
@@ -118,21 +135,6 @@ shinyServer(function(input, output, session) {
 
   #rendering the data for table
   output$table <- renderDataTable(datatable(data_filter(), filter = 'top'))
-
-  # #update the map based on filtering
-  # observe({
-  #   leafletProxy("map") %>%
-  #     clearMarkers() %>%
-  #     addCircleMarkers(data = data_filter(), lat =  ~Latitude, lng =~Longitude,
-  #                      radius = 5,
-  #                      label = ~Tree,
-  #                      popup = ~paste("<strong>", Tree, "</strong>",
-  #                                     "<br>Sampled_by:", Sampled_by,
-  #                                     "<br>Sampling_date:", Sampling_date),
-  #                      color = ~pal()(data_filter()$Section),
-  #                      stroke = FALSE, fillOpacity = 0.8)
-  #
-  # })
 
   #updating the selectInputs section and sampled_by based on each other
   observe({
