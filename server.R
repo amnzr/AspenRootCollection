@@ -98,8 +98,21 @@ shinyServer(function(input, output, session) {
     return(unique(data))
   })
 
+  #rendering the value boxes
+  output$selected_trees <- renderText(
+    nrow(data_filter())
+  )
+
+  output$collectors <- renderText(
+    data_filter()$Sampled_by %>%
+      str_split("_") %>%
+      unlist() %>%
+      unique() %>%
+      length()
+  )
+
+  #rendering the data for table
   output$table <- renderDataTable(datatable(data_filter(), filter = 'top'))
-  # print(data_filter())
 
   # #update the map based on filtering
   # observe({
