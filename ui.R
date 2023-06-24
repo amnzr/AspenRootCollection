@@ -6,28 +6,37 @@ library(shiny)
 library(shinydashboard)
 library(stringr)
 
-page_sidebar(theme = bs_theme(secondary = "#21719c"),
-             sidebar = uiOutput("sidebar"),
-             title = "Aspen root collection",
-             layout_column_wrap(
-               width = "250px", fill = FALSE,height = "100px",
-               value_box(
-                 title = "Number of seleted Trees",
-                 value = textOutput("selected_trees"),
-                 showcase = bs_icon("tree"),
-                 theme_color = "secondary"
-               ),
-               value_box(
-                 title = "Number of Collcetors",
-                 value = textOutput("collectors"),
-                 showcase = bs_icon("person-check"),
-                 theme_color = "secondary"
-               )
-             ),
+#value boxes
+boxes <- list(
+  value_box(
+    title = "Number of seleted Trees",
+    value = textOutput("selected_trees"),
+    showcase = bs_icon("tree"),
+    theme_color = "secondary"
+  ),
+  value_box(
+    title = "Number of Collcetors",
+    value = textOutput("collectors"),
+    showcase = bs_icon("person"),
+    theme_color = "secondary"
+  )
+)
 
-             tabsetPanel(
-               nav_panel("Map", leafletOutput("map", height=600)),
-               nav_panel("Data", dataTableOutput("table")),
-               nav_panel("About",includeMarkdown("README.md"))
-             )
+#ui elements
+page_navbar(
+  title = "NordAsp",
+  sidebar = uiOutput("sidebar"),
+  nav_panel("Map", icon = icon("map"),
+            layout_columns(
+              col_widths = c(6, 6, 12),
+              row_heights = c(1, 5),
+              !!!boxes,
+              card(full_screen = TRUE,
+                   leafletOutput("map", height=600)
+              )
+            )
+  ),
+  nav_panel("Data", icon = icon("table"),
+            dataTableOutput("table")),
+  nav_panel("About",includeMarkdown("README.md"))
 )
