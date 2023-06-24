@@ -54,30 +54,44 @@ shinyServer(function(input, output, session) {
                          clearButton = TRUE,
                          update_on = 'close'
       ),
+      sliderInput("radius", "Radius(m)", min = 100, max = 1000, value = 500, step = 100),
       prettySwitch("dark_mode", "Dark mode"),
-      checkboxInput("paletteCheckbox", "Color Blind Friendly", value = FALSE),
-      sliderInput("radius", "Radius(m)", min = 100, max = 1000, value = 500, step = 100)
+      checkboxInput("blind", "Color Blind Mode", value = FALSE),
+      conditionalPanel(condition = "input.blind",
+                       uiOutput("blind_down"))
+      )
+  })
+
+  output$blind_down <- renderUI({
+    selectInput("blind_pal", "Color Palette",
+                choices = c("Red Blind", "Green Blind", "Blue Blind"),
+                selected = "deut"
     )
   })
 
   #create a color palette
   pal <- reactive({
-    if(isTRUE(input$paletteCheckbox)) {
-      paletteCol<- colorFactor(palette = createPalette(22, "#111111", target = "deut"),
+    if(isTRUE(input$blind)) {
+      target <- switch(input$blind_pal,
+                       "Red Blind" = "deut",
+                       "Green Blind" = "prot",
+                       "Blue Blind" = "trit"
+      )
+      p <- colorFactor(palette = createPalette(length(unique(data$Section)),
+                                                       "#111111", target = target),
                                domain = unique(data$Section)) }
 
     else {
-      #create a color palette
-      paletteCol <- colorFactor(palette = dark.colors(length(unique(data$Section))),
+      p <- colorFactor(palette = dark.colors(length(unique(data$Section))),
                                 domain = unique(data$Section)) }
-    return(paletteCol)
+    return(p)
   })
 
   leafy <- reactive({
-    p <- leaflet(data) %>%
+    leaflet(data) %>%
       addTiles() %>%
       addCircles(data = data_filter(), lat =  ~Latitude, lng =~Longitude,
-                 radius = input$radius,
+                 radius = 500,
                  opacity = 0.2,
                  color = ~pal()(data_filter()$Section)) %>%
       addCircleMarkers(data = data_filter(), lat =  ~Latitude, lng =~Longitude,
@@ -90,18 +104,15 @@ shinyServer(function(input, output, session) {
                        fillOpacity = 0.8) %>%
       addLegend(pal=pal(),
                 values=unique(data_filter()$Section),
-                opacity=1, na.label = "Not Available", title = "Section") %>%
+                opacity=0.8, na.label = "Not Available", title = "Section(s)") %>%
       addEasyButton(easyButton(
         icon="fa-crosshairs", title="ME",
         onClick=JS("function(btn, map){ map.locate({setView: true}); }")))
-
-    if (isTRUE(input$dark_mode))
-      p <- p %>%
-        addProviderTiles("CartoDB.DarkMatter")
-    return(p)
   })
 
-  output$map <- renderLeaflet({leafy()})
+  output$map <- renderLeaflet({
+    leafy()
+    })
 
 
   # filter data based on the sidebar selection
@@ -183,6 +194,35 @@ shinyServer(function(input, output, session) {
                            end = max(data$Sampling_date))
   })
 
+  observeEvent(input$radius, {
+    leafletProxy("map") %>%
+      clearShapes() %>%
+      addCircles(data = data_filter(), lat =  ~Latitude, lng =~Longitude,
+                 radius = input$radius,
+                 opacity = 0.2,
+                 color = ~pal()(data_filter()$Section)) %>%
+      addCircleMarkers(data = data_filter(), lat =  ~Latitude, lng =~Longitude,
+                       radius = 5,
+                       label = ~Tree,
+                       popup = ~paste("<strong>", Tree, "</strong>",
+                                      "<br>Sampled_by:", Sampled_by,
+                                      "<br>Sampling_date:", Sampling_date),
+                       color = ~pal()(data_filter()$Section),
+                       fillOpacity = 0.8)
+
+  })
+
+  observeEvent(input$dark_mode, {
+    if(input$dark_mode) {
+      leafletProxy("map") %>%
+        clearTiles() %>%
+        addProviderTiles("CartoDB.DarkMatter")
+    } else {
+      leafletProxy("map") %>%
+        clearTiles() %>%
+        addTiles()
+    }
+  })
 
   observe(session$setCurrentTheme(
     if (isTRUE(input$dark_mode))
