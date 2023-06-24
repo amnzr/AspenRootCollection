@@ -15,3 +15,6 @@
 
 #bslib
 <https://rstudio.github.io/bslib/articles/dashboards.html#theming>
+
+#color Deficits
+<https://cran.r-project.org/web/packages/Polychrome/vignettes/color-deficits.html>
