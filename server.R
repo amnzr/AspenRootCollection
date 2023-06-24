@@ -1,4 +1,5 @@
 #load required libraries
+library(bsTools)
 library(DT)
 library(leaflet)
 library(magrittr)
@@ -52,53 +53,55 @@ shinyServer(function(input, output, session) {
                          range = TRUE,
                          clearButton = TRUE,
                          update_on = 'close'
-                         ),
+      ),
       prettySwitch("dark_mode", "Dark mode"),
-      checkboxInput("paletteCheckbox", "Color Blind Friendly", value = FALSE)
+      checkboxInput("paletteCheckbox", "Color Blind Friendly", value = FALSE),
+      sliderInput("radius", "Radius(m)", min = 100, max = 1000, value = 500, step = 100)
     )
   })
 
   #create a color palette
   pal <- reactive({
     if(isTRUE(input$paletteCheckbox)) {
-      paletteCol<- colorFactor(palette = c("#1F77B4", "#FF7F0E", "#2CA02C", "#D62728", "#9467BD", "#8C564B",
-                                           "#E377C2", "#7F7F7F", "#BCBD22", "#17BECF", "#1B9E77", "#D95F02",
-                                           "#7570B3", "#E7298A", "#66A61E", "#E6AB02", "#A6761D", "#666666",
-                                           "#FDAE61", "#3288BD", "#5E4FA2", "#F16913"),
-                               domain = unique(data_filter()$Section)) }
+      paletteCol<- colorFactor(palette = createPalette(22, "#111111", target = "deut"),
+                               domain = unique(data$Section)) }
 
     else {
       #create a color palette
-      paletteCol <- colorFactor(palette = glasbey.colors(length(unique(data_filter()$Section))),
-                                domain = unique(data_filter()$Section)) }
+      paletteCol <- colorFactor(palette = dark.colors(length(unique(data$Section))),
+                                domain = unique(data$Section)) }
     return(paletteCol)
   })
 
-leafy <- reactive({
-  p <- leaflet(data) %>%
-    addTiles() %>%
-    addCircleMarkers(data = data_filter(), lat =  ~Latitude, lng =~Longitude,
-                     radius = 5,
-                     label = ~Tree,
-                     popup = ~paste("<strong>", Tree, "</strong>",
-                                    "<br>Sampled_by:", Sampled_by,
-                                    "<br>Sampling_date:", Sampling_date),
-                     color = ~pal()(data_filter()$Section),
-                     stroke = FALSE, fillOpacity = 0.8) %>%
-    addLegend(pal=pal(),
-              values=unique(data_filter()$Section),
-              opacity=1, na.label = "Not Available", title = "Section") %>%
-    addEasyButton(easyButton(
-      icon="fa-crosshairs", title="ME",
-      onClick=JS("function(btn, map){ map.locate({setView: true}); }")))
+  leafy <- reactive({
+    p <- leaflet(data) %>%
+      addTiles() %>%
+      addCircles(data = data_filter(), lat =  ~Latitude, lng =~Longitude,
+                 radius = input$radius,
+                 opacity = 0.2,
+                 color = ~pal()(data_filter()$Section)) %>%
+      addCircleMarkers(data = data_filter(), lat =  ~Latitude, lng =~Longitude,
+                       radius = 5,
+                       label = ~Tree,
+                       popup = ~paste("<strong>", Tree, "</strong>",
+                                      "<br>Sampled_by:", Sampled_by,
+                                      "<br>Sampling_date:", Sampling_date),
+                       color = ~pal()(data_filter()$Section),
+                       fillOpacity = 0.8) %>%
+      addLegend(pal=pal(),
+                values=unique(data_filter()$Section),
+                opacity=1, na.label = "Not Available", title = "Section") %>%
+      addEasyButton(easyButton(
+        icon="fa-crosshairs", title="ME",
+        onClick=JS("function(btn, map){ map.locate({setView: true}); }")))
 
-  if (isTRUE(input$dark_mode))
-    p <- p %>% addProviderTiles("CartoDB.DarkMatter")
+    if (isTRUE(input$dark_mode))
+      p <- p %>%
+        addProviderTiles("CartoDB.DarkMatter")
+    return(p)
+  })
 
-  return(p)
-})
-
-output$map <- renderLeaflet({leafy()})
+  output$map <- renderLeaflet({leafy()})
 
 
   # filter data based on the sidebar selection
@@ -129,6 +132,7 @@ output$map <- renderLeaflet({leafy()})
     data_filter()$Sampled_by %>%
       str_split("_") %>%
       unlist() %>%
+      grep(pattern = paste(input$sampled_by,collapse = "|"), value = TRUE) %>%
       unique() %>%
       length()
   )
