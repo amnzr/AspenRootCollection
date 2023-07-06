@@ -9,13 +9,13 @@ library(stringr)
 #value boxes
 boxes <- list(
   value_box(height = 200,
-    title = "Number of seleted Trees",
+    title = "Number of selected Trees",
     value = textOutput("selected_trees"),
     showcase = bs_icon("tree"),
     theme_color = "secondary"
   ),
   value_box(height = 200,
-    title = "Number of Collcetors",
+    title = "Number of Collectors",
     value = textOutput("collectors"),
     showcase = bs_icon("person"),
     theme_color = "secondary"
