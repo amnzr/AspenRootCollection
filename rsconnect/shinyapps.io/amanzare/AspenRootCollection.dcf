@@ -1,0 +1,14 @@
+name: AspenRootCollection
+title: AspenRootCollection
+username:
+account: amanzare
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 9336693
+bundleId: 7427718
+url: https://amanzare.shinyapps.io/AspenRootCollection/
+when: 1688663382.47943
+lastSyncTime: 1688663382.47945
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: data/.DS_Store|data/NordAsp_root_coordinates_backup.csv|helperlinks.md|LICENSE
